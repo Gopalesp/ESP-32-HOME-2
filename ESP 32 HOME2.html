@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Techno EYE Home Automation</title>
+
+  <!-- Firebase CDN Modules -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAMS8t8BkXypC_TUOqzIGo3bJscvg_-gKk",
+      authDomain: "esp-32-home2.firebaseapp.com",
+      databaseURL: "https://esp-32-home2-default-rtdb.firebaseio.com/",
+      projectId: "esp-32-home2",
+      storageBucket: "esp-32-home2.appspot.com",
+      messagingSenderId: "762891474196",
+      appId: "1:762891474196:web:54f0c1d65f679106b59e01"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const database = getDatabase(app);
+
+    const switchNames = ["Tube", "Fan", "Lam", "S1", "S2"];
+    const switchPaths = ["relay1", "relay2", "relay3", "relay4", "relay5"];
+
+    document.getElementById("loginForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const email = document.getElementById("deymoupiya08@gmail.com").value;
+      const password = document.getElementById("gopal@77").value;
+
+      signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          document.getElementById("loginSection").style.display = "none";
+          document.getElementById("controlSection").style.display = "block";
+          initRelayControls();
+        })
+        .catch((error) => {
+          alert("Login failed: " + error.message);
+        });
+    });
+
+    function initRelayControls() {
+      switchPaths.forEach((path, index) => {
+        const dbRef = ref(database, `${path}/int`);
+        const button = document.getElementById(`toggleButton${index + 1}`);
+        const statusText = document.getElementById(`status${index + 1}`);
+
+        function updateButton(state) {
+          const isOn = state === true || state === 1;
+          button.textContent = isOn ? `Turn ${switchNames[index]} OFF` : `Turn ${switchNames[index]} ON`;
+          button.style.backgroundColor = isOn ? "green" : "red";
+          button.style.color = "white";
+          statusText.textContent = `${switchNames[index]} is currently ${isOn ? "ON" : "OFF"}`;
+          statusText.style.color = isOn ? "green" : "red";
+        }
+
+        button.addEventListener("click", async () => {
+          try {
+            const snapshot = await get(dbRef);
+            if (snapshot.exists()) {
+              const currentState = snapshot.val();
+              const newState = !(currentState === true || currentState === 1);
+              await set(dbRef, newState);
+            } else {
+              console.error("No data found on click!");
+            }
+          } catch (error) {
+            console.error("Error writing to database:", error);
+          }
+        });
+
+        onValue(dbRef, (snapshot) => {
+          if (snapshot.exists()) {
+            updateButton(snapshot.val());
+          } else {
+            statusText.textContent = "No data found!";
+            statusText.style.color = "gray";
+          }
+        });
+      });
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      background: linear-gradient(45deg, #ff9a9e, #fad0c4, #fbc2eb, #a18cd1);
+      background-size: 400% 400%;
+      animation: gradientAnimation 10s ease infinite;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      justify-content: center;
+    }
+
+    @keyframes gradientAnimation {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .heading {
+      font-size: 32px;
+      font-weight: bold;
+      margin-bottom: 30px;
+      color: #333;
+      text-align: center;
+    }
+
+    .container, .login-container {
+      background: rgba(255, 255, 255, 0.8);
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    input, button {
+      font-size: 18px;
+      padding: 10px;
+      margin: 5px;
+      border: none;
+      border-radius: 6px;
+    }
+
+    button {
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+    }
+
+    .status {
+      margin-top: 10px;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    #controlSection {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="heading">Home Automation esp-32-home2</div>
+
+  <!-- Login Section -->
+  <div id="loginSection" class="login-container">
+    <form id="loginForm">
+      <input type="email" id="email" placeholder="Email" required /><br />
+      <input type="password" id="password" placeholder="Password" required /><br />
+      <button type="submit">Login</button>
+    </form>
+  </div>
+
+  <!-- Control Section -->
+  <div id="controlSection">
+    <div class="button-container">
+      <div class="container">
+        <button id="toggleButton1">Loading...</button>
+        <p id="status1" class="status">Checking status...</p>
+      </div>
+      <div class="container">
+        <button id="toggleButton2">Loading...</button>
+        <p id="status2" class="status">Checking status...</p>
+      </div>
+      <div class="container">
+        <button id="toggleButton3">Loading...</button>
+        <p id="status3" class="status">Checking status...</p>
+      </div>
+      <div class="container">
+        <button id="toggleButton4">Loading...</button>
+        <p id="status4" class="status">Checking status...</p>
+      </div>
+      <div class="container">
+        <button id="toggleButton5">Loading...</button>
+        <p id="status5" class="status">Checking status...</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
