@@ -1,194 +1,286 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Techno EYE Home Automation</title>
+  <title>Firebase Relay Control Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 0 10px 40px;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      justify-content: space-between;
+    }
+    h1 {
+      margin-top: 30px;
+      font-size: 1.8rem;
+    }
+    .relay-card {
+      display: inline-block;
+      background-color: white;
+      padding: 20px;
+      margin: 15px;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      width: 220px;
+      vertical-align: top;
+    }
+    .relay-card h2 {
+      margin-bottom: 10px;
+      font-size: 1.3rem;
+    }
+    .relay-card p {
+      margin-bottom: 10px;
+      font-size: 1rem;
+    }
+    .relay-card button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      background-color: blue;
+      cursor: pointer;
+      font-size: 16px;
+      width: 90%;
+      transition: opacity 0.3s ease;
+    }
+    .relay-card button:hover {
+      opacity: 0.8;
+    }
+    #allOffBtn, #logoutBtn {
+      max-width: 300px;
+      width: 90%;
+      padding: 12px 25px;
+      font-size: 16px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin: 15px auto;
+      display: block;
+      color: white;
+      transition: opacity 0.3s ease;
+    }
+    #allOffBtn {
+      background-color: #d32f2f;
+    }
+    #allOffBtn:hover {
+      opacity: 0.8;
+    }
+    #logoutBtn {
+      background-color: #555;
+    }
+    #logoutBtn:hover {
+      opacity: 0.8;
+    }
 
-  <!-- Firebase CDN Modules -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-    import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+    #dashboard {
+      display: none;
+    }
+    #loginForm {
+      max-width: 400px;
+      margin: 80px auto 20px;
+      background: white;
+      padding: 30px 20px;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    #loginForm input {
+      width: 100%;
+      padding: 12px 15px;
+      margin: 10px 0 20px;
+      font-size: 1rem;
+      border: 1.5px solid #ccc;
+      border-radius: 10px;
+      box-sizing: border-box;
+      outline-offset: 2px;
+      transition: border-color 0.3s ease;
+    }
+    #loginForm input:focus {
+      border-color: #1e88e5;
+    }
+    #loginForm button {
+      width: 100%;
+      background-color: #1e88e5;
+      color: white;
+      padding: 12px;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    #loginForm button:hover {
+      background-color: #1565c0;
+    }
+    #dashboard .relay-container {
+      max-width: 960px;
+      margin: 20px auto 0;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    @media (max-width: 700px) {
+      .relay-card {
+        width: 90%;
+        margin: 10px auto;
+        display: block;
+      }
+      body {
+        padding: 0 10px 60px;
+      }
+    }
+    footer {
+      font-size: 0.9rem;
+      color: #666;
+      padding: 10px 0;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
 
+  <h1>Firebase Relay Control Dashboard</h1>
+
+  <!-- Login form -->
+  <div id="loginForm">
+    <input type="email" id="email" placeholder="Enter Email" required />
+    <input type="password" id="password" placeholder="Enter Password" required />
+    <button id="loginBtn">Login</button>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard">
+    <div class="relay-container">
+      <div class="relay-card">
+        <h2>Relay 1</h2>
+        <p>Status: <span id="status1">Loading...</span></p>
+        <button id="btn1">Toggle</button>
+      </div>
+
+      <div class="relay-card">
+        <h2>Relay 2</h2>
+        <p>Status: <span id="status2">Loading...</span></p>
+        <button id="btn2">Toggle</button>
+      </div>
+
+      <div class="relay-card">
+        <h2>Relay 3</h2>
+        <p>Status: <span id="status3">Loading...</span></p>
+        <button id="btn3">Toggle</button>
+      </div>
+
+      <div class="relay-card">
+        <h2>Relay 4</h2>
+        <p>Status: <span id="status4">Loading...</span></p>
+        <button id="btn4">Toggle</button>
+      </div>
+    </div>
+
+    <button id="allOffBtn">All OFF</button>
+    <button id="logoutBtn">Logout</button>
+  </div>
+
+  <footer>
+    Created by Tech StudyCell
+  </footer>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+
+  <script>
+    // Firebase config
     const firebaseConfig = {
-      apiKey: "AIzaSyAMS8t8BkXypC_TUOqzIGo3bJscvg_-gKk",
-      authDomain: "esp-32-home2.firebaseapp.com",
-      databaseURL: "https://esp-32-home2-default-rtdb.firebaseio.com/",
-      projectId: "esp-32-home2",
-      storageBucket: "esp-32-home2.appspot.com",
-      messagingSenderId: "762891474196",
-      appId: "1:762891474196:web:54f0c1d65f679106b59e01"
-    };
+	  apiKey: "AIzaSyAMS8t8BkXypC_TUOqzIGo3bJscvg_-gKk",
+  authDomain: "esp-32-home2.firebaseapp.com",
+  databaseURL: "https://esp-32-home2-default-rtdb.firebaseio.com",
+  projectId: "esp-32-home2",
+  storageBucket: "esp-32-home2.firebasestorage.app",
+  messagingSenderId: "762891474196",
+  appId: "1:762891474196:web:54f0c1d65f679106b59e01",
+  measurementId: "G-KXC9BSQ81M"
+	};
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const database = getDatabase(app);
-    document.getElementById("loginForm").addEventListener("submit", (e) => {
-      e.preventDefault();
-      const email = document.getElementById("deymoupiya08@gmail.com").value;
+    firebase.initializeApp(firebaseConfig);
+
+    const loginForm = document.getElementById("loginForm");
+    const dashboard = document.getElementById("dashboard");
+    const loginBtn = document.getElementById("loginBtn");
+
+    loginBtn.addEventListener("click", () => {
+      const email = document.getElementById("deymoupiya08@gmail.com").value.trim();
       const password = document.getElementById("gopal@77").value;
 
-      signInWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-          document.getElementById("loginSection").style.display = "none";
-          document.getElementById("controlSection").style.display = "block";
-          initRelayControls();
+      if (!email || !password) {
+        alert("Please enter email and password.");
+        return;
+      }
+
+      firebase.auth().signInWithEmailAndPassword(email, password)
+        .then(userCredential => {
+          console.log("Signed in as", userCredential.user.email);
+          loginForm.style.display = "none";
+          dashboard.style.display = "block";
+          startRelayControl();
         })
-        .catch((error) => {
+        .catch(error => {
           alert("Login failed: " + error.message);
         });
     });
 
-    const switchNames = ["Tube", "Fan", "Lam", "S1", "S2"];
-    const switchPaths = ["relay1", "relay2", "relay3", "relay4", "relay5"];
+    function startRelayControl() {
+      const db = firebase.database();
 
-    
+      const relays = [
+        { id: 1, path: "relay1" },
+        { id: 2, path: "relay2" },
+        { id: 3, path: "relay3" },
+        { id: 4, path: "relay4" },
+      ];
 
-    function initRelayControls() {
-      switchPaths.forEach((path, index) => {
-        const dbRef = ref(database, `${path}/int`);
-        const button = document.getElementById(`toggleButton${index + 1}`);
-        const statusText = document.getElementById(`status${index + 1}`);
+      relays.forEach(relay => {
+        const statusText = document.getElementById(`status${relay.id}`);
+        const toggleButton = document.getElementById(`btn${relay.id}`);
+        const relayRef = db.ref("/" + relay.path);
 
-        function updateButton(state) {
-          const isOn = state === true || state === 1;
-          button.textContent = isOn ? `Turn ${switchNames[index]} OFF` : `Turn ${switchNames[index]} ON`;
-          button.style.backgroundColor = isOn ? "green" : "red";
-          button.style.color = "white";
-          statusText.textContent = `${switchNames[index]} is currently ${isOn ? "ON" : "OFF"}`;
-          statusText.style.color = isOn ? "green" : "red";
-        }
-
-        button.addEventListener("click", async () => {
-          try {
-            const snapshot = await get(dbRef);
-            if (snapshot.exists()) {
-              const currentState = snapshot.val();
-              const newState = !(currentState === true || currentState === 1);
-              await set(dbRef, newState);
-            } else {
-              console.error("No data found on click!");
-            }
-          } catch (error) {
-            console.error("Error writing to database:", error);
-          }
+        relayRef.on("value", (snapshot) => {
+          const state = snapshot.val();
+          statusText.innerText = state ? "ON" : "OFF";
+          toggleButton.style.backgroundColor = state ? "green" : "blue";
         });
 
-        onValue(dbRef, (snapshot) => {
-          if (snapshot.exists()) {
-            updateButton(snapshot.val());
-          } else {
-            statusText.textContent = "No data found!";
-            statusText.style.color = "gray";
-          }
-        });
+        toggleButton.onclick = () => {
+          relayRef.get().then(snap => {
+            relayRef.set(!snap.val());
+          });
+        };
       });
+
+      document.getElementById("allOffBtn").onclick = () => {
+        relays.forEach(relay => {
+          db.ref("/" + relay.path).set(false);
+        });
+      };
     }
+
+    document.getElementById("logoutBtn").onclick = () => {
+      firebase.auth().signOut()
+        .then(() => {
+          dashboard.style.display = "none";
+          loginForm.style.display = "block";
+          document.getElementById("email").value = "";
+          document.getElementById("password").value = "";
+        })
+        .catch(error => {
+          alert("Logout failed: " + error.message);
+        });
+    };
   </script>
-
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      margin: 0;
-      background: linear-gradient(45deg, #ff9a9e, #fad0c4, #fbc2eb, #a18cd1);
-      background-size: 400% 400%;
-      animation: gradientAnimation 10s ease infinite;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-      justify-content: center;
-    }
-
-    @keyframes gradientAnimation {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-
-    .heading {
-      font-size: 32px;
-      font-weight: bold;
-      margin-bottom: 30px;
-      color: #333;
-      text-align: center;
-    }
-
-    .container, .login-container {
-      background: rgba(255, 255, 255, 0.8);
-      padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    input, button {
-      font-size: 18px;
-      padding: 10px;
-      margin: 5px;
-      border: none;
-      border-radius: 6px;
-    }
-
-    button {
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
-
-    button:hover {
-      transform: scale(1.05);
-    }
-
-    .status {
-      margin-top: 10px;
-      font-size: 16px;
-      font-weight: bold;
-    }
-
-    #controlSection {
-      display: none;
-    }
-  </style>
-</head>
-
-<body>
-  <div class="heading">Home Automation esp-32-home2</div>
-
-  <!-- Login Section -->
-  <div id="loginSection" class="login-container">
-    <form id="loginForm">
-      <input type="email" id="email" placeholder="Email" required /><br />
-      <input type="password" id="password" placeholder="Password" required /><br />
-      <button type="submit">Login</button>
-    </form>
-  </div>
-
-  <!-- Control Section -->
-  <div id="controlSection">
-    <div class="button-container">
-      <div class="container">
-        <button id="toggleButton1">Loading...</button>
-        <p id="status1" class="status">Checking status...</p>
-      </div>
-      <div class="container">
-        <button id="toggleButton2">Loading...</button>
-        <p id="status2" class="status">Checking status...</p>
-      </div>
-      <div class="container">
-        <button id="toggleButton3">Loading...</button>
-        <p id="status3" class="status">Checking status...</p>
-      </div>
-      <div class="container">
-        <button id="toggleButton4">Loading...</button>
-        <p id="status4" class="status">Checking status...</p>
-      </div>
-      <div class="container">
-        <button id="toggleButton5">Loading...</button>
-        <p id="status5" class="status">Checking status...</p>
-      </div>
-    </div>
-  </div>
 </body>
 </html>
