@@ -24,10 +24,6 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const database = getDatabase(app);
-
-    const switchNames = ["Tube", "Fan", "Lam", "S1", "S2"];
-    const switchPaths = ["relay1", "relay2", "relay3", "relay4", "relay5"];
-
     document.getElementById("loginForm").addEventListener("submit", (e) => {
       e.preventDefault();
       const email = document.getElementById("deymoupiya08@gmail.com").value;
@@ -43,6 +39,11 @@
           alert("Login failed: " + error.message);
         });
     });
+
+    const switchNames = ["Tube", "Fan", "Lam", "S1", "S2"];
+    const switchPaths = ["relay1", "relay2", "relay3", "relay4", "relay5"];
+
+    
 
     function initRelayControls() {
       switchPaths.forEach((path, index) => {
